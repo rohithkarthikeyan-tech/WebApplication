@@ -1,0 +1,83 @@
+{% extends 'website/base.html' %}
+
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="glass-card auth-card">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div class="brand-icon-wrapper" style="margin: 0 auto 1.25rem; width: 48px; height: 48px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#04050b" stroke-width="2.5">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="8.5" cy="7" r="4"></circle>
+          <line x1="20" y1="8" x2="20" y2="14"></line>
+          <line x1="23" y1="11" x2="17" y2="11"></line>
+        </svg>
+      </div>
+      <h1 style="font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; margin-bottom: 0.4rem;">
+        Initialize Your Account
+      </h1>
+      <p style="color: var(--text-secondary); font-size: 0.92rem;">
+        Join Aether with built-in Django authentication security.
+      </p>
+    </div>
+
+    <form method="POST" action="{% url 'register' %}" novalidate id="register-form">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div style="padding: 0.85rem 1rem; border-radius: var(--radius-md); background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); color: #fca5a5; font-size: 0.88rem; margin-bottom: 1.25rem;">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label for="{{ form.username.id_for_label }}" class="form-label">
+          <span>Username</span>
+          {% if form.username.errors %}<span class="form-error-feedback">{{ form.username.errors.0 }}</span>{% endif %}
+        </label>
+        {{ form.username }}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.email.id_for_label }}" class="form-label">
+          <span>Email Address</span>
+          {% if form.email.errors %}<span class="form-error-feedback">{{ form.email.errors.0 }}</span>{% endif %}
+        </label>
+        {{ form.email }}
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.password.id_for_label }}" class="form-label">
+          <span>Password</span>
+          {% if form.password.errors %}<span class="form-error-feedback">{{ form.password.errors.0 }}</span>{% endif %}
+        </label>
+        {{ form.password }}
+        <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Minimum 8 characters.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="{{ form.password_confirm.id_for_label }}" class="form-label">
+          <span>Confirm Password</span>
+          {% if form.password_confirm.errors %}<span class="form-error-feedback">{{ form.password_confirm.errors.0 }}</span>{% endif %}
+        </label>
+        {{ form.password_confirm }}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;" id="submit-register-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="8.5" cy="7" r="4"></circle>
+          <line x1="20" y1="8" x2="20" y2="14"></line>
+          <line x1="23" y1="11" x2="17" y2="11"></line>
+        </svg>
+        <span>Complete Registration</span>
+      </button>
+    </form>
+
+    <div class="form-footer-note">
+      Already have an account? <a href="{% url 'login' %}" id="link-to-login">Sign in here</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

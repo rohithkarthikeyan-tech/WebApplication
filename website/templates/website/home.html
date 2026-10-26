@@ -1,0 +1,242 @@
+{% extends 'website/base.html' %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-grid">
+      <!-- Left Hero Column -->
+      <div>
+        <div class="badge badge-glow" style="margin-bottom: 1.5rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span>Django 6.1 &bull; Dark Glassmorphism</span>
+        </div>
+
+        <h1 class="hero-headline">
+          Intelligent Web <br>
+          <span class="brand-gradient-text">Engineered for Velocity.</span>
+        </h1>
+
+        <p class="hero-subhead">
+          Step into a high-performance web experience crafted with Django, modern glassmorphic aesthetics, fluid cyan-purple ambient animations, and built-in database security.
+        </p>
+
+        <div class="hero-cta-group">
+          {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg" id="hero-dashboard-cta">
+              <span>Go to Dashboard</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+            <a href="{% url 'about' %}" class="btn btn-secondary btn-lg" id="hero-about-cta">
+              <span>Explore Platform</span>
+            </a>
+          {% else %}
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg" id="hero-register-cta">
+              <span>Get Started Now</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-secondary btn-lg" id="hero-login-cta">
+              <span>Sign In</span>
+            </a>
+          {% endif %}
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1.25rem;">
+          <div style="display: flex; margin-left: 0.5rem;">
+            <span style="width: 32px; height: 32px; border-radius: 50%; background: #00f2fe; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; color: #04050b; border: 2px solid #070913; margin-left: -8px;">DJ</span>
+            <span style="width: 32px; height: 32px; border-radius: 50%; background: #9b51e0; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; color: #fff; border: 2px solid #070913; margin-left: -8px;">SQL</span>
+            <span style="width: 32px; height: 32px; border-radius: 50%; background: #4facfe; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; color: #04050b; border: 2px solid #070913; margin-left: -8px;">CSS</span>
+          </div>
+          <p style="font-size: 0.88rem; color: var(--text-secondary);">
+            Production-ready Django architecture with 0 unnecessary bloat.
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Glass Mockup -->
+      <div class="hero-mockup-wrapper">
+        <div class="hero-mockup-glow" aria-hidden="true"></div>
+        <div class="hero-interactive-board">
+          <div class="board-header">
+            <div class="board-dots">
+              <span class="board-dot board-dot-red"></span>
+              <span class="board-dot board-dot-yellow"></span>
+              <span class="board-dot board-dot-green"></span>
+            </div>
+            <span class="board-title">system_monitor.py &bull; status: 200 OK</span>
+            <span class="badge" style="font-size: 0.7rem; padding: 0.15rem 0.5rem;">SECURE</span>
+          </div>
+
+          <div class="board-content">
+            <div class="mockup-item">
+              <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(0, 242, 254, 0.12); display: grid; place-items: center; color: var(--cyan-primary);">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                    <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                    <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 0.92rem;">Django Backend Engine</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">ASGI / WSGI &bull; Native Routing</div>
+                </div>
+              </div>
+              <span style="font-size: 0.82rem; font-weight: 600; color: #10b981;">ACTIVE</span>
+            </div>
+
+            <div class="mockup-item">
+              <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(155, 81, 224, 0.15); display: grid; place-items: center; color: #c084fc;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 0.92rem;">SQLite Local Database</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">db.sqlite3 &bull; Contact Inquiries Table</div>
+                </div>
+              </div>
+              <span style="font-size: 0.82rem; font-weight: 600; color: #10b981;">CONNECTED</span>
+            </div>
+
+            <div class="mockup-item">
+              <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(56, 189, 248, 0.15); display: grid; place-items: center; color: #38bdf8;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 0.92rem;">Django Auth & CSRF Shield</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">Session Middleware & Token Verification</div>
+                </div>
+              </div>
+              <span style="font-size: 0.82rem; font-weight: 600; color: #38bdf8;">100% SECURE</span>
+            </div>
+
+            <div class="mockup-item">
+              <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(244, 63, 94, 0.15); display: grid; place-items: center; color: #fb7185;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 0.92rem;">Real-time Message Pipeline</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">Django Messages Framework & Toasts</div>
+                </div>
+              </div>
+              <span style="font-size: 0.82rem; font-weight: 600; color: #10b981;">READY</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats Strip -->
+    <div class="stats-strip">
+      {% for stat in stats %}
+        <div class="stat-item">
+          <div class="stat-value">{{ stat.value }}</div>
+          <div class="stat-label">{{ stat.label }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Features Grid Section -->
+<section class="section-padding" id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="badge badge-purple">Core Architecture</div>
+      <h2 class="section-title">Engineered Without Compromise</h2>
+      <p class="section-subtitle">
+        Everything you need for an immersive, modern web application powered by the robust foundation of Python and Django.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      {% for feature in features %}
+        <div class="glass-card interactive-hover feature-card">
+          <div class="feature-icon-box">
+            {% if feature.icon == 'lightning' %}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            {% elif feature.icon == 'shield' %}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            {% elif feature.icon == 'sparkles' %}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+              </svg>
+            {% elif feature.icon == 'responsive' %}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            {% elif feature.icon == 'database' %}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+              </svg>
+            {% else %}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+            {% endif %}
+          </div>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-desc">{{ feature.desc }}</p>
+          <span class="feature-tag">{{ feature.tag }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Call-to-Action Section -->
+<section style="padding: 3rem 0 5rem;">
+  <div class="container">
+    <div class="glass-card" style="padding: 3.5rem 2.5rem; text-align: center; border-color: rgba(0, 242, 254, 0.3); background: radial-gradient(circle at center, rgba(15, 23, 50, 0.85) 0%, rgba(9, 12, 28, 0.75) 100%);">
+      <div class="badge badge-glow" style="margin-bottom: 1rem;">Experience It Live</div>
+      <h2 style="font-family: var(--font-display); font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 700; margin-bottom: 1rem;">
+        Ready to Discover Modern Django?
+      </h2>
+      <p style="color: var(--text-secondary); max-width: 580px; margin: 0 auto 2.2rem; font-size: 1.05rem;">
+        Sign in to access your personal dashboard, test database-backed contact messages, or inspect the clean modular architecture.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        {% if user.is_authenticated %}
+          <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">Open Dashboard</a>
+          <a href="{% url 'contact' %}" class="btn btn-secondary btn-lg">Send Inquiry</a>
+        {% else %}
+          <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Create Free Account</a>
+          <a href="{% url 'login' %}" class="btn btn-secondary btn-lg">Log In</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
