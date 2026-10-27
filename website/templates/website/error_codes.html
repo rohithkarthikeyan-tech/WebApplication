@@ -1,0 +1,74 @@
+{% extends 'website/base.html' %}
+
+{% block title %}Error Code Matrix & Diagnostics{% endblock %}
+
+{% block content %}
+<section class="section-padding">
+  <div class="container">
+    <div class="section-header">
+      <div class="badge badge-purple">8 Diagnostic Error Codes</div>
+      <h1 class="section-title">Error Code Directory</h1>
+      <p class="section-subtitle">
+        Comprehensive references for client errors, server exceptions, and our site-specific custom error 480.
+      </p>
+    </div>
+
+    <!-- Error Codes Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.75rem;">
+      {% for err in error_codes %}
+        <div class="glass-card interactive-hover" style="display: flex; flex-direction: column; justify-content: space-between; border-color: {% if err.code == 480 %}rgba(0, 242, 254, 0.45){% elif err.code >= 500 %}rgba(244, 63, 94, 0.35){% else %}rgba(155, 81, 224, 0.35){% endif %};">
+          <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+              <span class="badge {% if err.code == 480 %}badge-glow{% elif err.code >= 500 %}badge-purple{% endif %}" style="font-size: 0.95rem; font-weight: 800; padding: 0.35rem 0.85rem;">
+                HTTP {{ err.code }}
+              </span>
+              <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">
+                {{ err.category }}
+              </span>
+            </div>
+
+            <h3 style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff;">
+              {{ err.title }}
+            </h3>
+
+            <p style="font-size: 0.9rem; color: var(--text-highlight); margin-bottom: 1rem; font-weight: 500;">
+              {{ err.summary }}
+            </p>
+
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass-subtle); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1rem;">
+              <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 0.35rem;">Technical Cause</div>
+              <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                {{ err.description }}
+              </p>
+            </div>
+
+            <div style="background: rgba(0, 242, 254, 0.04); border: 1px solid rgba(0, 242, 254, 0.15); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.5rem;">
+              <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--cyan-primary); font-weight: 700; margin-bottom: 0.35rem;">How to Resolve</div>
+              <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                {{ err.resolution }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; pt-2; border-top: 1px solid var(--border-glass-subtle); padding-top: 1rem;">
+            <a href="{% url 'error_preview' err.code %}" target="_blank" class="btn btn-secondary btn-sm" style="flex: 1;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="10 8 16 12 10 16 10 8"></polygon>
+              </svg>
+              <span>Trigger {{ err.code }}</span>
+            </a>
+            <button type="button" class="btn btn-primary btn-sm" style="flex: 1;" onclick="openAssistantWithError({{ err.code }}, 'Explain error {{ err.code }} and how to solve it.')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Ask AI</span>
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

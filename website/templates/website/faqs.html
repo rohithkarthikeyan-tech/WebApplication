@@ -1,0 +1,176 @@
+{% extends 'website/base.html' %}
+
+{% block title %}Knowledgebase & FAQs{% endblock %}
+
+{% block content %}
+<section class="section-padding">
+  <div class="container">
+    <div class="section-header">
+      <div class="badge badge-glow">SQL Powered Knowledgebase</div>
+      <h1 class="section-title">Frequently Asked Questions</h1>
+      <p class="section-subtitle">
+        Explore {{ total_faqs }} curated answers stored directly in our SQL database. Search by keyword or ask the AI Assistant anytime.
+      </p>
+    </div>
+
+    <!-- Live FAQ Search & Filter Bar -->
+    <div style="max-width: 760px; margin: 0 auto 2.5rem;">
+      <div style="position: relative; margin-bottom: 1.25rem;">
+        <input 
+          type="text" 
+          id="faq-search-input" 
+          class="glass-input" 
+          placeholder="Search FAQs by question, answer, or keyword..."
+          style="padding-left: 3rem; font-size: 1.05rem;"
+          autocomplete="off"
+        >
+        <div style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;" id="category-filter-group">
+        <button type="button" class="btn btn-sm btn-primary category-btn active" data-category="ALL">All Topics ({{ total_faqs }})</button>
+        {% for cat in categories %}
+          <button type="button" class="btn btn-sm btn-secondary category-btn" data-category="{{ cat }}">
+            {{ cat }}
+          </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- FAQ Accordion List -->
+    <div style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;" id="faq-list-container">
+      {% for faq in faqs %}
+        <div class="glass-card faq-item" data-category="{{ faq.category }}" data-keywords="{{ faq.keywords|lower }}" style="padding: 1.5rem 1.8rem; cursor: pointer; transition: all var(--transition-smooth);">
+          <div class="faq-header" style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
+              <span class="badge badge-purple" style="font-size: 0.7rem;">{{ faq.category }}</span>
+              <h3 class="faq-question-text" style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; margin: 0; color: #fff;">
+                {{ faq.question }}
+              </h3>
+            </div>
+            <div class="faq-chevron" style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); display: grid; place-items: center; color: var(--cyan-primary); flex-shrink: 0; transition: transform 0.3s ease;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="faq-answer-body" style="display: none; padding-top: 1.25rem; margin-top: 1rem; border-top: 1px solid var(--border-glass-subtle); color: var(--text-secondary); font-size: 0.98rem; line-height: 1.7;">
+            <p>{{ faq.answer }}</p>
+            {% if faq.keywords %}
+              <div style="margin-top: 0.75rem; font-size: 0.78rem; color: var(--text-muted);">
+                Tags: <span style="color: var(--text-highlight);">{{ faq.keywords }}</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- No Match Indicator -->
+    <div id="no-faq-results" style="display: none; text-align: center; padding: 4rem 1rem;">
+      <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
+      <h3 style="font-family: var(--font-display); font-size: 1.3rem;">No matching FAQs found</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+        Try refining your search terms, or ask our intelligent AI Assistant directly!
+      </p>
+      <button type="button" class="btn btn-primary" onclick="openAssistantWithQuery('Search FAQs')">
+        Ask AI Assistant Now
+      </button>
+    </div>
+
+    <!-- Bottom Assistant CTA -->
+    <div style="max-width: 860px; margin: 4.5rem auto 0; text-align: center;">
+      <div class="glass-card" style="padding: 2.5rem; border-color: rgba(0, 242, 254, 0.3);">
+        <div class="badge badge-glow" style="margin-bottom: 0.75rem;">Still Need Answers?</div>
+        <h2 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; margin-bottom: 0.6rem;">
+          Ask the Aether AI Assistant
+        </h2>
+        <p style="color: var(--text-secondary); max-width: 540px; margin: 0 auto 1.5rem; font-size: 0.95rem;">
+          Our assistant can query the database directly, troubleshoot error codes, or create an official support ticket for you.
+        </p>
+        <button type="button" class="btn btn-primary btn-lg" onclick="toggleChatWidget(true)" id="faq-open-assistant-cta">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Open AI Assistant Standby</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const faqItems = document.querySelectorAll('.faq-item');
+  const searchInput = document.getElementById('faq-search-input');
+  const categoryBtns = document.querySelectorAll('.category-btn');
+  const noResults = document.getElementById('no-faq-results');
+
+  // Accordion Toggle
+  faqItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const body = item.querySelector('.faq-answer-body');
+      const chevron = item.querySelector('.faq-chevron');
+      const isOpen = body.style.display === 'block';
+
+      // Toggle this item
+      body.style.display = isOpen ? 'none' : 'block';
+      chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+  });
+
+  // Filter & Search Logic
+  function applyFilters() {
+    const term = (searchInput.value || '').toLowerCase().trim();
+    const activeCategory = document.querySelector('.category-btn.active').dataset.category;
+    let visibleCount = 0;
+
+    faqItems.forEach(item => {
+      const qText = item.querySelector('.faq-question-text').textContent.toLowerCase();
+      const aText = item.querySelector('.faq-answer-body').textContent.toLowerCase();
+      const kwText = item.dataset.keywords || '';
+      const cat = item.dataset.category;
+
+      const matchesTerm = !term || qText.includes(term) || aText.includes(term) || kwText.includes(term);
+      const matchesCat = activeCategory === 'ALL' || cat === activeCategory;
+
+      if (matchesTerm && matchesCat) {
+        item.style.display = 'block';
+        visibleCount++;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+
+    if (noResults) {
+      noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', applyFilters);
+  }
+
+  categoryBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      categoryBtns.forEach(b => {
+        b.classList.remove('active', 'btn-primary');
+        b.classList.add('btn-secondary');
+      });
+      btn.classList.add('active', 'btn-primary');
+      btn.classList.remove('btn-secondary');
+      applyFilters();
+    });
+  });
+});
+</script>
+{% endblock %}

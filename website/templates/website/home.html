@@ -158,6 +158,34 @@
         </div>
       {% endfor %}
     </div>
+
+    <!-- Third-Party Telemetry Banner (Time Limit & Fallback Guarded) -->
+    <div style="margin-top: 2.5rem; background: rgba(14, 18, 38, 0.6); backdrop-filter: blur(16px); border: 1px solid rgba(0, 242, 254, 0.25); border-radius: var(--radius-lg); padding: 1.25rem 1.75rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.25); display: grid; place-items: center; color: var(--cyan-primary); flex-shrink: 0;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 0.78rem; text-transform: uppercase; font-weight: 700; color: var(--cyan-primary);">Third-Party Telemetry API</span>
+            <span class="badge {% if external_insight.status == 'online' %}badge-glow{% else %}badge-purple{% endif %}" style="font-size: 0.68rem; padding: 0.1rem 0.4rem;">
+              {{ external_insight.source|upper }} &bull; {{ external_insight.latency_ms }}ms
+            </span>
+          </div>
+          <div style="font-size: 0.94rem; color: #fff; font-style: italic; margin-top: 0.2rem;">
+            "{{ external_insight.data.quote }}" &mdash; <span style="color: var(--text-secondary); font-style: normal;">{{ external_insight.data.author }}</span>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.75rem;">
+        <a href="{% url 'faqs' %}" class="btn btn-secondary btn-sm">Search FAQs</a>
+        <a href="{% url 'error_codes' %}" class="btn btn-secondary btn-sm">8 Error Codes</a>
+        <a href="{% url 'health_check' %}" class="btn btn-primary btn-sm">Subsystem Health</a>
+      </div>
+    </div>
   </div>
 </section>
 

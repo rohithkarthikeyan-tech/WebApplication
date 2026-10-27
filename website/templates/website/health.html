@@ -1,0 +1,192 @@
+{% extends 'website/base.html' %}
+
+{% block title %}System Health & Subsystem Telemetry{% endblock %}
+
+{% block content %}
+<section class="section-padding">
+  <div class="container">
+    <div class="dashboard-header">
+      <div>
+        <div class="badge badge-glow" style="margin-bottom: 0.5rem;">Real-time Telemetry</div>
+        <h1 class="user-welcome-title">System Health Monitor</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.25rem;">
+          Continuous diagnostics for SQL persistence, MongoDB telemetry, and Third-Party External APIs.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <a href="?format=json" target="_blank" class="btn btn-secondary btn-sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <span>Raw JSON Telemetry</span>
+        </a>
+        <a href="{% url 'health_check' %}" class="btn btn-primary btn-sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Refresh Check</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Health Overview Cards -->
+    <div class="dashboard-stats-grid" style="margin-bottom: 2rem;">
+      <!-- Overall Status -->
+      <div class="glass-card dash-stat-card interactive-hover">
+        <div class="dash-stat-top">
+          <span class="dash-stat-title">Platform Status</span>
+          <span class="badge" style="font-size: 0.7rem;">Verified</span>
+        </div>
+        <div class="dash-stat-num brand-gradient-text" style="color: #10b981;">HEALTHY</div>
+        <div style="font-size: 0.8rem; color: #10b981; margin-top: 0.4rem; display: flex; align-items: center; gap: 0.4rem;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
+          <span>All Core Endpoints Operational</span>
+        </div>
+      </div>
+
+      <!-- SQL Database Status -->
+      <div class="glass-card dash-stat-card interactive-hover">
+        <div class="dash-stat-top">
+          <span class="dash-stat-title">SQL Relational DB</span>
+          <span class="badge badge-purple" style="font-size: 0.7rem;">SQLite Engine</span>
+        </div>
+        <div class="dash-stat-num brand-gradient-text">{{ db_health.latency_ms }} ms</div>
+        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.4rem;">
+          {{ total_faqs }} FAQs &bull; {{ total_tickets }} Tickets Recorded
+        </div>
+      </div>
+
+      <!-- MongoDB Telemetry -->
+      <div class="glass-card dash-stat-card interactive-hover">
+        <div class="dash-stat-top">
+          <span class="dash-stat-title">MongoDB NoSQL State</span>
+          <span class="badge {% if mongo_health.connected %}badge-glow{% else %}badge-purple{% endif %}" style="font-size: 0.7rem;">
+            {% if mongo_health.connected %}LIVE CLUSTER{% else %}MEMORY FALLBACK{% endif %}
+          </span>
+        </div>
+        <div class="dash-stat-num brand-gradient-text" style="font-size: 1.8rem;">
+          {% if mongo_health.connected %}ONLINE{% else %}RESILIENT{% endif %}
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.4rem;">
+          {{ mongo_health.storage }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed Subsystems Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+      <!-- Third-Party API Telemetry Card (with timeout and fallback) -->
+      <div class="glass-card" style="border-color: rgba(0, 242, 254, 0.35);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(0, 242, 254, 0.12); display: grid; place-items: center; color: var(--cyan-primary);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: #fff;">
+                External Third-Party Telemetry
+              </h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Time Limit & Fallback Guarded</p>
+            </div>
+          </div>
+          <span class="badge {% if third_party.status == 'online' %}badge-glow{% else %}badge-purple{% endif %}" style="font-size: 0.72rem;">
+            {{ third_party.source|upper }}
+          </span>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-glass-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
+          <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;">
+            Payload Delivered
+          </div>
+          <blockquote style="font-style: italic; color: #fff; font-size: 1.05rem; line-height: 1.6; margin: 0 0 0.5rem;">
+            "{{ third_party.data.quote }}"
+          </blockquote>
+          <div style="font-size: 0.85rem; color: var(--cyan-primary); font-weight: 600;">
+            &mdash; {{ third_party.data.author }}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.88rem;">
+          <div>
+            <span style="color: var(--text-muted);">Response Latency:</span>
+            <strong style="color: #fff; margin-left: 0.4rem;">{{ third_party.latency_ms }} ms</strong>
+          </div>
+          <div>
+            <span style="color: var(--text-muted);">Timeout Limit:</span>
+            <strong style="color: #fff; margin-left: 0.4rem;">{{ third_party.timeout_threshold_seconds }}s</strong>
+          </div>
+          <div style="grid-column: 1 / -1; color: var(--text-muted); font-size: 0.8rem; word-break: break-all;">
+            Target Endpoint: <code style="color: var(--text-highlight);">{{ third_party.endpoint }}</code>
+          </div>
+          {% if third_party.reason %}
+            <div style="grid-column: 1 / -1; color: #fca5a5; font-size: 0.8rem;">
+              Fallback Engaged Reason: {{ third_party.reason }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Polyglot Storage Architecture Card -->
+      <div class="glass-card" style="border-color: rgba(155, 81, 224, 0.35);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(155, 81, 224, 0.15); display: grid; place-items: center; color: #c084fc;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: #fff;">
+                Storage Architecture
+              </h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">SQL + MongoDB Hybrid Schema</p>
+            </div>
+          </div>
+          <span class="badge" style="font-size: 0.72rem;">ACTIVE</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.03);">
+            <div>
+              <div style="font-weight: 600; font-size: 0.92rem; color: #fff;">SQL Relational Storage</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Users, FAQs, Error Codes, Support Tickets</div>
+            </div>
+            <span class="badge" style="font-size: 0.7rem; color: #10b981; border-color: rgba(16, 185, 129, 0.3);">
+              CONNECTED
+            </span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.03);">
+            <div>
+              <div style="font-weight: 600; font-size: 0.92rem; color: #fff;">MongoDB Telemetry Storage</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Chat logs, Feedback ratings, Request metrics</div>
+            </div>
+            <span class="badge {% if mongo_health.connected %}badge-glow{% else %}badge-purple{% endif %}" style="font-size: 0.7rem;">
+              {% if mongo_health.connected %}CONNECTED{% else %}IN-MEMORY FALLBACK{% endif %}
+            </span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.03);">
+            <div>
+              <div style="font-weight: 600; font-size: 0.92rem; color: #fff;">Request Logger Middleware</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">Method, Path, Response Status, Latency in ms</div>
+            </div>
+            <span class="badge" style="font-size: 0.7rem; color: var(--cyan-primary); border-color: rgba(0, 242, 254, 0.3);">
+              INTERCEPTING
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

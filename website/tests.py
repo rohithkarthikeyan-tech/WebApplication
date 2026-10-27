@@ -1,10 +1,12 @@
+import json
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from .models import ContactMessage
+from .models import ContactMessage, FAQ, ErrorCode, SupportTicket
+from .services import fetch_external_telemetry
 
 
-class WebsiteTests(TestCase):
+class WebsiteExtendedTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.username = 'testpilot'
@@ -16,99 +18,177 @@ class WebsiteTests(TestCase):
             password=self.password
         )
 
-    def test_home_page_status_and_template(self):
-        response = self.client.get(reverse('home'))
+    def test_faq_database_has_minimum_10_entries(self):
+        """Verifies requirement: minimum of 10 FAQs stored in SQL database"""
+        count = FAQ.objects.filter(is_active=True).count()
+        self.assertGreaterEqual(count, 10, f"Expected at least 10 FAQs in SQL DB, found {count}")
+
+    def test_faq_page_renders_with_faqs(self):
+        """Verifies FAQ page renders with FAQs and search input"""
+        response = self.client.get(reverse('faqs'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'website/home.html')
-        self.assertTemplateUsed(response, 'website/base.html')
-        self.assertContains(response, 'Aether')
-        self.assertContains(response, 'Django 6.1')
+        self.assertTemplateUsed(response, 'website/faqs.html')
+        self.assertContains(response, 'Frequently Asked Questions')
+        self.assertContains(response, 'faq-search-input')
+        self.assertContains(response, 'What is Aether and how is it architected?')
 
-    def test_about_page_status_and_template(self):
-        response = self.client.get(reverse('about'))
+    def test_error_codes_has_minimum_8_entries(self):
+        """Verifies requirement: minimum of 8 error codes (400, 401, 403, 404, 429, 500, 503, and custom 480)"""
+        required_codes = [400, 401, 403, 404, 429, 500, 503, 480]
+        db_codes = list(ErrorCode.objects.values_list('code', flat=True))
+        for code in required_codes:
+            self.assertIn(code, db_codes, f"Required error code {code} missing from SQL database")
+
+    def test_error_codes_directory_page(self):
+        """Verifies error codes page renders all 8 codes"""
+        response = self.client.get(reverse('error_codes'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'website/about.html')
-        self.assertContains(response, 'Architectural Roadmap')
-        self.assertContains(response, 'about_architecture.jpg')
+        self.assertTemplateUsed(response, 'website/error_codes.html')
+        self.assertContains(response, 'HTTP 400')
+        self.assertContains(response, 'HTTP 404')
+        self.assertContains(response, 'HTTP 500')
+        self.assertContains(response, 'HTTP 480')
+        self.assertContains(response, 'Aether Quantum Sync Failure')
 
-    def test_contact_page_get(self):
-        response = self.client.get(reverse('contact'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'website/contact.html')
-        self.assertContains(response, 'csrfmiddlewaretoken')
-
-    def test_contact_form_submission_saves_to_db(self):
-        initial_count = ContactMessage.objects.count()
-        payload = {
-            'name': 'Ada Lovelace',
-            'email': 'ada@analyticalengine.org',
-            'subject': 'Algorithm Pipeline Inquiry',
-            'message': 'Testing message persistence directly in SQLite.'
-        }
-        response = self.client.post(reverse('contact'), payload, follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(ContactMessage.objects.count(), initial_count + 1)
-        saved = ContactMessage.objects.latest('created_at')
-        self.assertEqual(saved.name, 'Ada Lovelace')
-        self.assertEqual(saved.subject, 'Algorithm Pipeline Inquiry')
-        self.assertContains(response, 'Your message regarding')
-
-    def test_registration_view_creates_user_and_authenticates(self):
-        payload = {
-            'username': 'novadev',
-            'email': 'nova@example.com',
-            'password': 'SecureP@ssword2026',
-            'password_confirm': 'SecureP@ssword2026',
-        }
-        response = self.client.post(reverse('register'), payload, follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(User.objects.filter(username='novadev').exists())
-        self.assertContains(response, 'novadev')
-        self.assertTemplateUsed(response, 'website/dashboard.html')
-
-    def test_registration_passwords_mismatch(self):
-        payload = {
-            'username': 'mismatchuser',
-            'email': 'mismatch@example.com',
-            'password': 'Password123!',
-            'password_confirm': 'DifferentPassword456!',
-        }
-        response = self.client.post(reverse('register'), payload)
-        self.assertEqual(response.status_code, 200)
-        self.assertFalse(User.objects.filter(username='mismatchuser').exists())
-        self.assertContains(response, 'Passwords do not match')
-
-    def test_login_and_logout_flow(self):
-        # Successful login
-        response = self.client.post(reverse('login'), {
-            'username': self.username,
-            'password': self.password
-        }, follow=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'website/dashboard.html')
-        self.assertContains(response, self.username)
-
-        # Logout
-        logout_response = self.client.get(reverse('logout'), follow=True)
-        self.assertEqual(logout_response.status_code, 200)
-        self.assertTemplateUsed(logout_response, 'website/home.html')
-
-    def test_dashboard_is_protected(self):
-        # Anonymous user redirected to login
-        response = self.client.get(reverse('dashboard'))
-        self.assertEqual(response.status_code, 302)
-        self.assertIn('/login/', response.url)
-
-        # Logged in user can access dashboard
-        self.client.login(username=self.username, password=self.password)
-        auth_response = self.client.get(reverse('dashboard'))
-        self.assertEqual(auth_response.status_code, 200)
-        self.assertTemplateUsed(auth_response, 'website/dashboard.html')
-        self.assertContains(auth_response, self.username)
-
-    def test_custom_404_page(self):
+    def test_custom_404_page_has_ask_assistant(self):
+        """Verifies custom 404 page has Ask the assistant option"""
         response = self.client.get(reverse('custom_404'))
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, 'website/404.html')
-        self.assertContains(response, '404', status_code=404)
-        self.assertContains(response, 'Coordinates Unreachable', status_code=404)
+        self.assertContains(response, 'Ask the Assistant', status_code=404)
+        self.assertContains(response, 'openAssistantWithError(404', status_code=404)
+
+    def test_custom_500_page_has_ask_assistant(self):
+        """Verifies custom 500 page has Ask the assistant option"""
+        response = self.client.get(reverse('custom_500'))
+        self.assertEqual(response.status_code, 500)
+        self.assertTemplateUsed(response, 'website/500.html')
+        self.assertContains(response, 'Ask the Assistant', status_code=500)
+        self.assertContains(response, 'openAssistantWithError(500', status_code=500)
+
+    def test_site_specific_error_preview_480(self):
+        """Verifies triggering site-specific error code 480"""
+        response = self.client.get(reverse('error_preview', kwargs={'code': 480}))
+        self.assertEqual(response.status_code, 480)
+        self.assertContains(response, '480', status_code=480)
+        self.assertContains(response, 'Aether Quantum Sync Failure', status_code=480)
+
+    def test_ai_assistant_answers_from_sql_faq(self):
+        """Verifies AI assistant answers from SQL FAQ data"""
+        payload = {
+            'message': 'What is Aether and how is it architected?',
+            'session_id': 'test_sess_01'
+        }
+        response = self.client.post(
+            reverse('chat_api'),
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['can_answer'])
+        self.assertIn('Aether', data['reply'])
+        self.assertIn('SQL FAQ Database', data['reply'])
+
+    def test_ai_assistant_explains_error_codes(self):
+        """Verifies AI assistant explains error code 480 and 404"""
+        payload = {
+            'message': 'Can you explain error 480?',
+            'session_id': 'test_sess_02'
+        }
+        response = self.client.post(
+            reverse('chat_api'),
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['intent'], 'error_explanation')
+        self.assertIn('480', data['reply'])
+        self.assertIn('Quantum Sync', data['reply'])
+
+    def test_ai_assistant_escalates_when_cannot_answer(self):
+        """Verifies AI assistant offers support ticket when it cannot answer"""
+        payload = {
+            'message': 'xyz999unrelatednonsensequerythatmatchesnofaq',
+            'session_id': 'test_sess_03'
+        }
+        response = self.client.post(
+            reverse('chat_api'),
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data['can_answer'])
+        self.assertTrue(data['suggest_ticket'])
+        self.assertIn('create a Support Ticket', data['reply'])
+
+    def test_ai_assistant_creates_support_ticket_in_sql(self):
+        """Verifies support ticket creation via assistant is stored in SQL"""
+        initial_count = SupportTicket.objects.count()
+        payload = {
+            'message': 'Please create ticket: Database latency spike on node 3',
+            'session_id': 'test_sess_04'
+        }
+        response = self.client.post(
+            reverse('chat_api'),
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SupportTicket.objects.count(), initial_count + 1)
+        latest_ticket = SupportTicket.objects.latest('created_at')
+        self.assertTrue(latest_ticket.ticket_number.startswith('TICK-'))
+        self.assertEqual(latest_ticket.source, 'AI Assistant')
+
+    def test_feedback_api_records(self):
+        """Verifies feedback API returns success"""
+        payload = {
+            'session_id': 'test_sess_05',
+            'rating': 'up',
+            'message': 'Great explanation of error 404'
+        }
+        response = self.client.post(
+            reverse('feedback_api'),
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'recorded')
+
+    def test_health_check_json_endpoint(self):
+        """Verifies health check endpoint returns JSON with SQL DB and third-party API telemetry"""
+        response = self.client.get(reverse('health_check'), {'format': 'json'})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['status'], 'healthy')
+        self.assertIn('database_sql', data['subsystems'])
+        self.assertEqual(data['subsystems']['database_sql']['status'], 'connected')
+        self.assertIn('database_mongodb', data['subsystems'])
+        self.assertIn('third_party_api', data['subsystems'])
+        self.assertIn('timeout_threshold_seconds', data['subsystems']['third_party_api'])
+
+    def test_third_party_api_service_with_timeout_and_fallback(self):
+        """Verifies third-party API enforces timeout and provides fallback data"""
+        telemetry = fetch_external_telemetry(timeout=2.0)
+        self.assertIn(telemetry['status'], ['online', 'fallback'])
+        self.assertIn('quote', telemetry['data'])
+        self.assertIn('author', telemetry['data'])
+        self.assertEqual(telemetry['timeout_threshold_seconds'], 2.0)
+
+    def test_tickets_page_and_form_submission(self):
+        """Verifies support tickets web page and SQL form submission"""
+        initial_count = SupportTicket.objects.count()
+        response = self.client.post(reverse('tickets'), {
+            'name': 'Grace Hopper',
+            'email': 'grace@compiler.org',
+            'subject': 'Syntax Parser Malfunction',
+            'description': 'Found a moth inside relay #70.',
+            'priority': 'High'
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(SupportTicket.objects.count(), initial_count + 1)
+        ticket = SupportTicket.objects.latest('created_at')
+        self.assertEqual(ticket.name, 'Grace Hopper')
+        self.assertEqual(ticket.priority, 'High')

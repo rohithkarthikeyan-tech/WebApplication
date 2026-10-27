@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="{% block meta_description %}A modern, responsive Django website with dark theme glassmorphism, animated gradients, and enterprise authentication.{% endblock %}">
+  <meta name="description" content="{% block meta_description %}A modern, responsive Django website with dark theme glassmorphism, animated gradients, enterprise authentication, SQL FAQs, and MongoDB telemetry.{% endblock %}">
   <title>{% block title %}Aether{% endblock %} | Next-Gen Django Platform</title>
 
   <!-- Google Fonts Preconnect -->
@@ -48,6 +48,18 @@
           </li>
           <li>
             <a href="{% url 'about' %}" class="nav-item-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" id="nav-about">About</a>
+          </li>
+          <li>
+            <a href="{% url 'faqs' %}" class="nav-item-link {% if request.resolver_match.url_name == 'faqs' %}active{% endif %}" id="nav-faqs">FAQs</a>
+          </li>
+          <li>
+            <a href="{% url 'error_codes' %}" class="nav-item-link {% if request.resolver_match.url_name == 'error_codes' %}active{% endif %}" id="nav-errors">Error Codes</a>
+          </li>
+          <li>
+            <a href="{% url 'health_check' %}" class="nav-item-link {% if request.resolver_match.url_name == 'health_check' %}active{% endif %}" id="nav-health">Health</a>
+          </li>
+          <li>
+            <a href="{% url 'tickets' %}" class="nav-item-link {% if request.resolver_match.url_name == 'tickets' %}active{% endif %}" id="nav-tickets">Tickets</a>
           </li>
           <li>
             <a href="{% url 'contact' %}" class="nav-item-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" id="nav-contact">Contact</a>
@@ -135,6 +147,90 @@
     {% block content %}{% endblock %}
   </main>
 
+  <!-- Global AI Assistant Chat Widget (Present on EVERY page) -->
+  <div class="assistant-widget-container" id="assistant-widget-container">
+    <!-- Floating Trigger Button -->
+    <button type="button" class="assistant-trigger-btn" id="assistant-trigger-btn" aria-label="Open AI Assistant" onclick="toggleChatWidget()">
+      <div class="assistant-pulse-ring"></div>
+      <div class="assistant-btn-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#04050b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
+          <rect x="4" y="8" width="16" height="12" rx="4"></rect>
+          <circle cx="9" cy="13" r="1.5" fill="#04050b"></circle>
+          <circle cx="15" cy="13" r="1.5" fill="#04050b"></circle>
+          <line x1="9" y1="17" x2="15" y2="17" stroke="#04050b" stroke-width="2"></line>
+        </svg>
+      </div>
+      <span class="assistant-live-dot" title="AI Standby Online"></span>
+    </button>
+
+    <!-- Chat Modal Window -->
+    <div class="assistant-chat-panel glass-card" id="assistant-chat-panel" role="dialog" aria-modal="true" aria-label="Aether AI Assistant Dialog">
+      <!-- Header -->
+      <div class="assistant-header">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <div class="brand-icon-wrapper" style="width:34px; height:34px; font-size:1.1rem;">
+            🤖
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:0.4rem;">
+              <strong style="color:#fff; font-size:0.95rem;">Aether AI Assistant</strong>
+              <span class="badge" style="font-size:0.65rem; padding:0.1rem 0.4rem;">Live</span>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">SQL FAQs &bull; 8 Error Codes &bull; MongoDB Logs</div>
+          </div>
+        </div>
+        <button type="button" class="assistant-close-btn" onclick="toggleChatWidget(false)" aria-label="Close Assistant">&times;</button>
+      </div>
+
+      <!-- Quick Chips Row -->
+      <div class="assistant-chips-row">
+        <button type="button" class="assistant-chip" onclick="openAssistantWithQuery('Search FAQs')">💡 Search FAQs</button>
+        <button type="button" class="assistant-chip" onclick="openAssistantWithError(404, 'Explain error 404')">🔍 Error 404</button>
+        <button type="button" class="assistant-chip" onclick="openAssistantWithError(500, 'Explain error 500')">⚡ Error 500</button>
+        <button type="button" class="assistant-chip" onclick="openAssistantWithError(480, 'Explain error 480')">🔮 Custom 480</button>
+        <button type="button" class="assistant-chip" onclick="openAssistantWithQuery('Create support ticket')">🎫 Open Ticket</button>
+      </div>
+
+      <!-- Messages History -->
+      <div class="assistant-messages-list" id="assistant-messages-list">
+        <div class="assistant-msg msg-bot">
+          <div class="msg-bubble">
+            Hello! I am your <strong>Aether AI Assistant</strong>.
+            <br><br>
+            • <strong>SQL FAQs</strong>: Ask questions answered from our database.<br>
+            • <strong>Error Diagnostics</strong>: Ask me to explain any error code (400, 401, 403, 404, 429, 500, 503, 480).<br>
+            • <strong>Support Escalation</strong>: If I cannot answer, I will create a support ticket in SQL for you.<br>
+            • <strong>MongoDB Telemetry</strong>: All conversations & feedback are preserved.
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div class="assistant-typing" id="assistant-typing" style="display:none;">
+        <span></span><span></span><span></span>
+        <span style="font-size:0.75rem; color:var(--text-muted); margin-left:0.5rem;">Querying SQL knowledgebase...</span>
+      </div>
+
+      <!-- Input Form -->
+      <form class="assistant-input-bar" id="assistant-input-form" onsubmit="handleChatSubmit(event)">
+        <input 
+          type="text" 
+          id="assistant-input-field" 
+          class="glass-input" 
+          placeholder="Ask a question or code (404, 500, 480)..." 
+          autocomplete="off"
+        >
+        <button type="submit" class="btn btn-primary" id="assistant-send-btn" aria-label="Send Message" style="padding:0.6rem 0.9rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Global Footer -->
   <footer class="site-footer">
     <div class="container">
@@ -151,7 +247,7 @@
             <span>Aether<span class="brand-gradient-text">.io</span></span>
           </a>
           <p class="footer-brand-desc">
-            A state-of-the-art web platform engineered with Django, SQLite, dark glassmorphism, and responsive reactive layouts.
+            A state-of-the-art web platform engineered with Django, SQLite, MongoDB telemetry, dark glassmorphism, and responsive reactive layouts.
           </p>
         </div>
 
@@ -160,13 +256,11 @@
           <ul class="footer-links">
             <li><a href="{% url 'home' %}">Home</a></li>
             <li><a href="{% url 'about' %}">About Platform</a></li>
+            <li><a href="{% url 'faqs' %}">SQL FAQs (10+)</a></li>
+            <li><a href="{% url 'error_codes' %}">8 Error Codes Directory</a></li>
+            <li><a href="{% url 'health_check' %}">System Health Monitor</a></li>
+            <li><a href="{% url 'tickets' %}">Support Tickets</a></li>
             <li><a href="{% url 'contact' %}">Contact & Inquiries</a></li>
-            {% if user.is_authenticated %}
-              <li><a href="{% url 'dashboard' %}">User Dashboard</a></li>
-            {% else %}
-              <li><a href="{% url 'login' %}">User Sign In</a></li>
-              <li><a href="{% url 'register' %}">Create Account</a></li>
-            {% endif %}
           </ul>
         </div>
 
@@ -174,9 +268,10 @@
           <h4 class="footer-col-title">Technology</h4>
           <ul class="footer-links">
             <li><a href="https://www.djangoproject.com/" target="_blank" rel="noopener">Django 6 Framework</a></li>
-            <li><a href="https://www.sqlite.org/" target="_blank" rel="noopener">SQLite Persistence</a></li>
-            <li><a href="{% url 'about' %}">Glassmorphic CSS</a></li>
-            <li><a href="{% url 'about' %}">CSRF Security Core</a></li>
+            <li><a href="https://www.sqlite.org/" target="_blank" rel="noopener">SQLite Relational DB</a></li>
+            <li><a href="https://www.mongodb.com/" target="_blank" rel="noopener">MongoDB Telemetry</a></li>
+            <li><a href="{% url 'health_check' %}">Timeout Third-Party API</a></li>
+            <li><a href="{% url 'about' %}">AI Knowledge Engine</a></li>
           </ul>
         </div>
 
@@ -188,7 +283,7 @@
               <span>All Systems Operational</span>
             </div>
             <p style="font-size: 0.8rem; color: var(--text-muted);">
-              Running Django on port 8000. Connected to local SQLite DB.
+              Request logging middleware active. Connected to SQL & MongoDB pipeline.
             </p>
           </div>
         </div>
@@ -198,7 +293,9 @@
         <p>&copy; {% now "Y" %} Aether Systems. Engineered with Django & Glassmorphism.</p>
         <div style="display: flex; gap: 1.5rem;">
           <a href="{% url 'custom_404' %}" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">Preview 404</a>
-          <a href="{% url 'contact' %}" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">Support</a>
+          <a href="{% url 'custom_500' %}" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">Preview 500</a>
+          <a href="{% url 'error_codes' %}" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">8 Error Codes</a>
+          <a href="{% url 'health_check' %}" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">Health Check</a>
         </div>
       </div>
     </div>
@@ -206,6 +303,165 @@
 
   <!-- Core Script Bundle -->
   <script src="{% static 'website/js/main.js' %}"></script>
+
+  <!-- Global AI Assistant Chat Logic -->
+  <script>
+    const ASSISTANT_SESSION_ID = 'session_' + Math.random().toString(36).substring(2, 10);
+
+    function toggleChatWidget(forceState) {
+      const panel = document.getElementById('assistant-chat-panel');
+      if (!panel) return;
+      if (typeof forceState === 'boolean') {
+        if (forceState) panel.classList.add('open');
+        else panel.classList.remove('open');
+      } else {
+        panel.classList.toggle('open');
+      }
+
+      if (panel.classList.contains('open')) {
+        const input = document.getElementById('assistant-input-field');
+        if (input) input.focus();
+        scrollAssistantToBottom();
+      }
+    }
+
+    function scrollAssistantToBottom() {
+      const list = document.getElementById('assistant-messages-list');
+      if (list) {
+        list.scrollTop = list.scrollHeight;
+      }
+    }
+
+    function openAssistantWithQuery(query) {
+      toggleChatWidget(true);
+      const input = document.getElementById('assistant-input-field');
+      if (input) {
+        input.value = query;
+        sendAssistantMessage(query);
+      }
+    }
+
+    function openAssistantWithError(code, message) {
+      toggleChatWidget(true);
+      sendAssistantMessage(message || `Explain error ${code}`);
+    }
+
+    async function sendAssistantMessage(userText) {
+      if (!userText || !userText.trim()) return;
+
+      const list = document.getElementById('assistant-messages-list');
+      const typing = document.getElementById('assistant-typing');
+      const input = document.getElementById('assistant-input-field');
+
+      if (input) input.value = '';
+
+      // Append user bubble
+      const userDiv = document.createElement('div');
+      userDiv.className = 'assistant-msg msg-user';
+      userDiv.innerHTML = `<div class="msg-bubble">${escapeHtml(userText)}</div>`;
+      list.appendChild(userDiv);
+      scrollAssistantToBottom();
+
+      // Show typing
+      if (typing) typing.style.display = 'flex';
+
+      try {
+        const response = await fetch('/api/chat/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: userText,
+            session_id: ASSISTANT_SESSION_ID
+          })
+        });
+
+        const data = await response.json();
+        if (typing) typing.style.display = 'none';
+
+        // Format response markdown into HTML
+        let formattedReply = renderMarkdown(data.reply || 'No reply generated.');
+
+        // If assistant cannot answer, render 1-click ticket creation option
+        if (data.suggest_ticket && !data.ticket_created) {
+          formattedReply += `
+            <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-glass-subtle);">
+              <button type="button" class="btn btn-primary btn-sm" onclick="escalateToTicket('${escapeHtml(userText).replace(/'/g, "\\'")}')">
+                🎫 Create Support Ticket Now
+              </button>
+            </div>
+          `;
+        }
+
+        const botDiv = document.createElement('div');
+        botDiv.className = 'assistant-msg msg-bot';
+        botDiv.innerHTML = `
+          <div class="msg-bubble">${formattedReply}</div>
+          <div class="assistant-feedback-actions">
+            <span>Was this helpful?</span>
+            <button type="button" class="feedback-btn" title="Helpful" onclick="submitFeedback(this, 'up', '${escapeHtml(userText).replace(/'/g, "\\'")}')">👍</button>
+            <button type="button" class="feedback-btn" title="Not helpful" onclick="submitFeedback(this, 'down', '${escapeHtml(userText).replace(/'/g, "\\'")}')">👎</button>
+          </div>
+        `;
+        list.appendChild(botDiv);
+        scrollAssistantToBottom();
+
+      } catch (err) {
+        if (typing) typing.style.display = 'none';
+        const errDiv = document.createElement('div');
+        errDiv.className = 'assistant-msg msg-bot';
+        errDiv.innerHTML = `<div class="msg-bubble" style="border-color:#f43f5e; color:#fca5a5;">Connection to Assistant interrupted. You can open a ticket at <a href="/tickets/" style="color:#00f2fe;">Tickets Helpdesk</a>.</div>`;
+        list.appendChild(errDiv);
+        scrollAssistantToBottom();
+      }
+    }
+
+    function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('assistant-input-field');
+      if (input && input.value.trim()) {
+        sendAssistantMessage(input.value.trim());
+      }
+    }
+
+    async function submitFeedback(btn, rating, snippet) {
+      btn.parentElement.innerHTML = `<span style="color:#10b981;">✓ Feedback recorded in MongoDB</span>`;
+      try {
+        await fetch('/api/feedback/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: ASSISTANT_SESSION_ID,
+            rating: rating,
+            message: snippet
+          })
+        });
+      } catch (e) {
+        console.warn('Feedback recording fallback:', e);
+      }
+    }
+
+    function escalateToTicket(queryText) {
+      sendAssistantMessage(`create ticket for: ${queryText}`);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.innerText = text;
+      return div.innerHTML;
+    }
+
+    function renderMarkdown(md) {
+      // Basic markdown conversions
+      return md
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+        .replace(/`([^`]+)`/gim, '<code>$1</code>')
+        .replace(/\n\n/gim, '<br><br>')
+        .replace(/\n/gim, '<br>');
+    }
+  </script>
+
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>
