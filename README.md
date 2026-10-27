@@ -11,7 +11,7 @@ A full-stack, enterprise-grade web application engineered with **Django 6**, **d
 
 ## 🌐 Live Deployment Link
 
-- **Live URL**: [https://webapplication-dsvi.onrender.com/](https://webapplication-dsvi.onrender.com/) *(or your deployed Render service endpoint)*
+- **Live URL**: [https://webapplication-hlsk.onrender.com/](https://webapplication-hlsk.onrender.com/)
 - **GitHub Repository**: [https://github.com/rohithkarthikeyan-tech/WebApplication](https://github.com/rohithkarthikeyan-tech/WebApplication)
 
 ---
@@ -125,6 +125,24 @@ python manage.py runserver
 ```
 
 Open your browser at: `http://127.0.0.1:8000/`
+
+---
+
+## ☁️ Render Production Deployment Settings
+
+When deploying this web service to [Render.com](https://render.com):
+
+1. **Environment**: `Python 3`
+2. **Build Command**:
+   ```bash
+   chmod +x build.sh && ./build.sh
+   ```
+   *(Or alternatively: `pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate`)*
+3. **Start Command**:
+   ```bash
+   python manage.py migrate && gunicorn myproject.wsgi:application
+   ```
+   *(Running `python manage.py migrate` ensures all SQL tables and 10+ FAQs & 8 ErrorCodes are seeded whenever the container starts).*
 
 ---
 

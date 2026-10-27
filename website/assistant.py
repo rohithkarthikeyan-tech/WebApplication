@@ -8,15 +8,41 @@ from .mongo import save_chat_log
 logger = logging.getLogger('website.assistant')
 
 
+def _ensure_db():
+    try:
+        from django.core.management import call_command
+        call_command('migrate', interactive=False)
+    except Exception:
+        pass
+
+
 def find_matching_error_code(query_text):
     """
     Checks if the user's message is asking about a known error code (400, 401, 403, 404, 429, 500, 503, 480).
     """
+    def _get_error(code_num):
+        try:
+            return ErrorCode.objects.filter(code=code_num).first()
+        except Exception:
+            _ensure_db()
+            try:
+                return ErrorCode.objects.filter(code=code_num).first()
+            except Exception:
+                from .seed_data import INITIAL_ERROR_CODES
+                match = next((e for e in INITIAL_ERROR_CODES if e['code'] == code_num), None)
+                if match:
+                    class MockErr:
+                        def __init__(self, d):
+                            for k, v in d.items():
+                                setattr(self, k, v)
+                    return MockErr(match)
+                return None
+
     # Regex for standard 3-digit error codes
     code_match = re.search(r'\b(400|401|403|404|429|500|503|480)\b', query_text)
     if code_match:
         code_num = int(code_match.group(1))
-        error_obj = ErrorCode.objects.filter(code=code_num).first()
+        error_obj = _get_error(code_num)
         if error_obj:
             return error_obj
 
@@ -38,7 +64,7 @@ def find_matching_error_code(query_text):
     }
     for kw, code_num in keyword_map.items():
         if kw in lower_query:
-            return ErrorCode.objects.filter(code=code_num).first()
+            return _get_error(code_num)
 
     return None
 
@@ -51,7 +77,20 @@ def search_faqs_in_sql(query_text):
     if not words:
         return None, 0
 
-    active_faqs = FAQ.objects.filter(is_active=True)
+    try:
+        active_faqs = list(FAQ.objects.filter(is_active=True))
+    except Exception:
+        _ensure_db()
+        try:
+            active_faqs = list(FAQ.objects.filter(is_active=True))
+        except Exception:
+            from .seed_data import INITIAL_FAQS
+            class MockFAQ:
+                def __init__(self, d):
+                    for k, v in d.items():
+                        setattr(self, k, v)
+            active_faqs = [MockFAQ(d) for d in INITIAL_FAQS]
+
     best_faq = None
     best_score = 0
 
@@ -59,7 +98,7 @@ def search_faqs_in_sql(query_text):
         score = 0
         q_lower = faq.question.lower()
         ans_lower = faq.answer.lower()
-        kw_lower = faq.keywords.lower()
+        kw_lower = getattr(faq, 'keywords', '').lower()
 
         for word in words:
             # Question matches have highest weight
@@ -83,17 +122,31 @@ def create_support_ticket_from_chat(name, email, subject, description, error_cod
     """
     Creates and saves a support ticket in the SQL database.
     """
-    ticket = SupportTicket.objects.create(
-        name=name or 'Anonymous User',
-        email=email or 'user@aether-support.local',
-        subject=subject or 'AI Assistant Escalated Ticket',
-        description=description,
-        source='AI Assistant',
-        associated_error_code=error_code,
-        priority='High' if error_code in [500, 503, 480] else 'Medium',
-        status='Open'
-    )
-    return ticket
+    try:
+        ticket = SupportTicket.objects.create(
+            name=name or 'Anonymous User',
+            email=email or 'user@aether-support.local',
+            subject=subject or 'AI Assistant Escalated Ticket',
+            description=description,
+            source='AI Assistant',
+            associated_error_code=error_code,
+            priority='High' if error_code in [500, 503, 480] else 'Medium',
+            status='Open'
+        )
+        return ticket
+    except Exception:
+        _ensure_db()
+        ticket = SupportTicket.objects.create(
+            name=name or 'Anonymous User',
+            email=email or 'user@aether-support.local',
+            subject=subject or 'AI Assistant Escalated Ticket',
+            description=description,
+            source='AI Assistant',
+            associated_error_code=error_code,
+            priority='High' if error_code in [500, 503, 480] else 'Medium',
+            status='Open'
+        )
+        return ticket
 
 
 def ask_assistant(user_message, session_id='anonymous', context=None, user=None):
