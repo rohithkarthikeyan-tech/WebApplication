@@ -21,6 +21,10 @@ ENV/
 # Local tooling scripts
 powershell.cmd
 
+# Static collected files
+staticfiles/
+
 # Operating System Files
 .DS_Store
 Thumbs.db
+
